@@ -19,7 +19,6 @@ public class CustomerController {
 	private List<Customer> theCustomers;
 	
 	private CustomerServ custServ;
-//	private List<Customer> theCustomers;
 //	@PostConstruct
 //	private void loadData() {
 //		theCustomers = new ArrayList<>();
@@ -41,7 +40,7 @@ public class CustomerController {
 
 	@PostMapping("/save")
 	public String saveCustomer(@ModelAttribute("customer") Customer c) {
-		if (c == null) {
+		if (c == null) { //or should be c.getId() == null
 			custServ.addCust(c);
 		} else {
 			custServ.updateCust(c);
@@ -60,13 +59,6 @@ public class CustomerController {
 		}
 		m.addAttribute("customer", newCust);
 		return "/customer/customer-form";
-	}
-	
-	@GetMapping("/update")
-	public String updateCustomer(int id) {
-		Customer cust = custServ.findById(id);
-		custServ.updateCust(cust);
-		return "/customer/customers-page";
 	}
 	
 	@GetMapping("/del")
