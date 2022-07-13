@@ -40,8 +40,9 @@ public class CustomerController {
 
 	@PostMapping("/save")
 	public String saveCustomer(@ModelAttribute("customer") Customer c) {
-		if (c == null) { //or should be c.getId() == null
+		if ((Integer) c.getId() == 0) {
 			custServ.addCust(c);
+			System.out.println("Customer Added");
 		} else {
 			custServ.updateCust(c);
 		}
