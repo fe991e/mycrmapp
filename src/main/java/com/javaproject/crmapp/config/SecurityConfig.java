@@ -1,36 +1,40 @@
 package com.javaproject.crmapp.config;
 
-import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.User.UserBuilder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-@Configuration
+import com.javaproject.crmapp.dao.UserRepository;
+import com.javaproject.crmapp.service.CustomUserDetailsService;
+
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
+@EnableJpaRepositories(basePackageClasses=UserRepository.class)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
+	@Autowired
+	private CustomUserDetailsService userDetailsServ;
+	
 	@Override
 	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-		
-		UserBuilder users = User.withDefaultPasswordEncoder();
-		
-		auth.inMemoryAuthentication()
-		.withUser(users.username("john").password("test123").roles("EMPLOYEE"))
-		.withUser(users.username("mary").password("test123").roles("EMPLOYEE", "MANAGER"))
-		.withUser(users.username("susan").password("test123").roles("EMPLOYEE", "ADMIN"));
+		auth.userDetailsService(userDetailsServ).passwordEncoder(encodePw());
 	}
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
+		http.csrf().disable();
 		http.authorizeRequests()
+		.antMatchers("/customer/list").authenticated()
 		.antMatchers("/customer/form*").hasAnyRole("MANAGER", "ADMIN", "EMPLOYEE")
 		.antMatchers("/customer/save*").hasAnyRole("MANAGER", "ADMIN", "EMPLOYEE")
 		.antMatchers("/customer/del").hasRole("ADMIN")
-		.antMatchers("/customer/**").hasRole("EMPLOYEE")
-		.antMatchers("/resources/**").permitAll()
+		.antMatchers("/").permitAll()
 		.and()
 		.formLogin()
 			.loginPage("/login")
@@ -42,6 +46,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		.exceptionHandling().accessDeniedPage("/access-denied");
 	}
 	
-	
+	@Bean
+	public BCryptPasswordEncoder encodePw() {
+		return new BCryptPasswordEncoder();
+	}
 
 }
